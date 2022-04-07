@@ -2,7 +2,7 @@ from crypt import methods
 from flask import Flask, render_template, request
 from flask import jsonify
 import requests
-from word_count import word_count_json
+from word_count import word_count_json, scrape_for_all_links
 import json
 
 app = Flask(__name__)
@@ -11,20 +11,38 @@ url = []
 
 @app.route("/", methods=["POST", "GET"])
 def home():
-    result = jsonify({"Read":"Input any website link to find out the wordcounts"})
+    result = jsonify({"":"Happy Scraping!"})
     urlinput = ""
+    result_len = 0
+    errors = False
     if(request.method == "POST"):
         print(request.form['url'])
         urlinput = request.form['url']
-        try:
-            # print (word_count_json(url))
-            result = jsonify(word_count_json(urlinput))
-            # print(result.json)
-        except:
-            urlinput = ""
-            result = jsonify({"Error":" Make sure it's a valid URL and starts with https://"})
+        if(request.form['links'] == "oneLink"):  
+            try:
+                # print (word_count_json(url))
+                result = word_count_json(urlinput)
+                result_len = len(result)
+                result = jsonify(result)
+                # print(result.json)
+            except:
+                urlinput = ""
+                errors = True
+                result = jsonify({"Error":" Make sure it's a valid URL and starts with https://"})
+        
+        elif(request.form['links'] == "allLinks"):
+            try:
+                print ("Scraping all links")
+                result1 = scrape_for_all_links(urlinput)
+                result_len = len(result1)
+                result = jsonify(result1)
+                # print(result.json)
+            except:
+                errors = True
+                urlinput = ""
+                result = jsonify({"Error":" Make sure it's a valid URL and starts with https://"})
     # print(url)
-    return render_template("index.html", result=result, formUrl=urlinput)
+    return render_template("index.html", result=result, formUrl=urlinput, result_len=result_len, errors=errors)
 
 @app.errorhandler(404)
 def page_not_found(e):
