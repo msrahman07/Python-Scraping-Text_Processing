@@ -40,15 +40,34 @@
         <span class="badge bg-secondary">Showing result for {{formUrl}}</span>
         <li class="list-group-item active" aria-current="true">Total unique words: {{result_len}}</li>
         {% endif %}
-        <ul class="list-group list-group-flush">
-            {% for key,value in result.json.items() %}
-                {% if errors %}
-                    <div class="alert alert-danger" role="alert">{{key}}: {{value}}</div>
-                {% else %}
-                    <li class="list-group-item">{{key}}: {{value}}</li>
+        <div class="row">
+            <div class="col-4">
+                <ul class="list-group list-group-flush">
+                    {% for key,value in result.json.items() %}
+                        {% if errors %}
+                            <div class="alert alert-danger" role="alert">{{key}}: {{value}}</div>
+                        {% else %}
+                            <li class="list-group-item">{{key}}: {{value}}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>    
+            </div>
+            <div class="col-8">
+                {% if cloud %}
+                <img src="/static/newscloud.png" alt="" class="img-fluid">
                 {% endif %}
-            {% endfor %}
-        </ul>
+                <br>
+                {% if urls %}
+                <h3>All scraped urls</h3>
+                <ul class="list-group list-group-flush">
+                    {% for url in urls %}
+                    <li class="list-group-item"><a href={{url}}>{{url}}</a></li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            
+        </div>
     </div>
     <script>
         const elements = document.getElementsByName("links");

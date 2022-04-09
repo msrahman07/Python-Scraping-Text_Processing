@@ -1,3 +1,4 @@
+from collections import Counter
 import requests
 from bs4 import BeautifulSoup
 import nltk
@@ -5,22 +6,22 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 nltk.download('punkt')
 nltk.download('stopwords')
-from collections import Counter
-    
+
 #URL = "https://www.geeksforgeeks.org/data-structures/"
 #req = requests.get(URL)
-#print(req.content)
+# print(req.content)
 #soup = BeautifulSoup(req.content, 'html5lib')
-#print(soup.prettify())
+# print(soup.prettify())
+
 
 def process_html(url):
     req = requests.get(url)
     html = req.content
     soup = BeautifulSoup(html, "html.parser")
-    
+
     for data in soup(['style', 'script']):
         data.decompose()
-        
+
     return ' '.join(soup.stripped_strings)
 
 
@@ -28,7 +29,9 @@ def tokenzie_text(text):
     tokenizer = nltk.RegexpTokenizer(r"\w+")
     words = tokenizer.tokenize(text)
     stop_words = stopwords.words('english')
-    removing_stop_words = [w.lower() for w in words if w.lower() not in stop_words]
+    removing_stop_words = [w.lower()
+                           for w in words if w.lower() not in stop_words]
+    # tokens = [t.lemma_ for t in removing_stop_words]
     return removing_stop_words
 
 
@@ -41,13 +44,14 @@ def word_count_json(url):
         num_words[w] = counts[w]
 
     sorted_dict = {}
-    sorted_keys = sorted(num_words, key=num_words.get, reverse=True)  # [1, 3, 2]
+    sorted_keys = sorted(num_words, key=num_words.get,
+                         reverse=True)  # [1, 3, 2]
 
     for w in sorted_keys:
         sorted_dict[w] = num_words[w]
 
+    return sorted_dict, ' '.join(words)
 
-    return sorted_dict
 
 def scrape_for_all_links(url):
     reqs = requests.get(url)
@@ -63,7 +67,7 @@ def scrape_for_all_links(url):
             urls.append(href)
             print(href)
             allText.append(process_html(href))
-    
+
     text = ' '.join(allText)
     num_words = {}
     words = tokenzie_text(text)
@@ -72,9 +76,25 @@ def scrape_for_all_links(url):
         num_words[w] = counts[w]
 
     sorted_dict = {}
-    sorted_keys = sorted(num_words, key=num_words.get, reverse=True)  # [1, 3, 2]
+    sorted_keys = sorted(num_words, key=num_words.get,
+                         reverse=True)  # [1, 3, 2]
 
     for w in sorted_keys:
         sorted_dict[w] = num_words[w]
 
-    return sorted_dict
+    return sorted_dict, ' '.join(words), urls
+
+
+def create_wordcloud(texts):
+    resp = requests.post('https://quickchart.io/wordcloud', json={
+        'format': 'png',
+        'width': 1000,
+        'height': 1000,
+        'fontScale': 15,
+        'scale': 'linear',
+        'removeStopwords': True,
+        'minWordLength': 4,
+        'text': texts,
+    })
+    with open('static/newscloud.png', 'wb') as f:
+        f.write(resp.content)
